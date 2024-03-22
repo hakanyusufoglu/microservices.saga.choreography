@@ -7,7 +7,7 @@ namespace Order.Api.Models
         public Guid Id { get; set; }
         public Guid BuyerId { get; set; }
         public List<OrderItem> OrderItems { get; set; }
-        public OrderStatus orderStatus { get; set; }
+        public OrderStatus OrderStatus { get; set; }
         public DateTime CreatedDate { get; set; }
         public Decimal TotalPice { get; set; }
     }
