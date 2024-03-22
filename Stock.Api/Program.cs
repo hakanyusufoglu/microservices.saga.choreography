@@ -31,11 +31,11 @@ var stockCollection = mongoDbService.GetCollection<Stock.Api.Models.Stock>();
 //stockcollection içerisinde veri olup olmadýðýný kontrol ediyoruz
 if (!stockCollection.FindSync(session => true).Any())
 {
-    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 100 });
-    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 200 });
-    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 50 });
-    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 30 });
-    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 5 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid().ToString(), Count = 100 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid().ToString(), Count = 200 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid().ToString(), Count = 50 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid().ToString(), Count = 30 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid().ToString(), Count = 5 });
 }
 
 app.Run();

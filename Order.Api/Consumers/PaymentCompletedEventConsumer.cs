@@ -13,6 +13,7 @@ namespace Order.Api.Consumers
                 throw new NullReferenceException();
 
             order.OrderStatus = Enums.OrderStatus.Completed;
+            await _context.SaveChangesAsync();
         }
     }
 }
