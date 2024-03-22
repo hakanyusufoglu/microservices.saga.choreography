@@ -7,6 +7,6 @@ namespace Shared.Events
         public Guid OrderId { get; set; }
         public string Message { get; set; }
 
-        public List<OrderItemMessage> OrderItemMessages { get; set; }
+        public List<OrderItemMessage> OrderItems { get; set; }
     }
 }
