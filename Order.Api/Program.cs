@@ -64,6 +64,7 @@ app.MapPost("/create-order", async (CreateOrderVm model, OrderApiDbContext _cont
         }).ToList()
     };
 
+    //Yayýnlamýþ olunan evente subscribe olan servisler bu eventi alýr.
    await _publishEndPoint.Publish(order);
 });
 

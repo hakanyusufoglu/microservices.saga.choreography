@@ -1,11 +1,12 @@
 ﻿using MassTransit;
 using MongoDB.Driver;
+using Shared;
 using Shared.Events;
 using Stock.Api.Services;
 
 namespace Stock.Api.Consumers
 {
-    public class OrderCreatedEventConsumer(MongoDbService mongoDbService) : IConsumer<OrderCreatedEvent>
+    public class OrderCreatedEventConsumer(MongoDbService mongoDbService, ISendEndpointProvider sendEndpointProvider, IPublishEndpoint publishEndpoint) : IConsumer<OrderCreatedEvent>
     {
         public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
         {
@@ -28,19 +29,39 @@ namespace Stock.Api.Consumers
                 {
                     Models.Stock stock = await (await collection.FindAsync(s => s.ProductId == orderItem.ProductId)).FirstOrDefaultAsync();
 
-                    stock.Count -=orderItem.Count;
-                    
+                    stock.Count -= orderItem.Count;
+
                     // FindOneAndReplaceAsync metodu ile stock güncellenir.
                     await collection.FindOneAndReplaceAsync(s => s.ProductId == orderItem.ProductId, stock);
                 }
 
 
                 //payment servisi uyaracak event'in fırlatılması
+                var sendEndPoint = await sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{RabbitMqSettings.Payment_StockReservedEventQueue}"));
+
+                StockReservedEvent stockReservedEvent = new()
+                {
+                    BuyerId = context.Message.BuyerId,
+                    OrderId = context.Message.OrderId,
+                    TotalPrice = context.Message.TotalPrice,
+                    OrderItems = context.Message.OrderItems
+                };
+
+                //Send diyince hedef olan kuyruğa event fırlatılır.
+                await sendEndPoint.Send(stockReservedEvent);
             }
             else
             {
                 //stok işlemi başarısız
                 //order'ı uyaracak event'in fırlatılması
+                StockNotReservedEvent stockNotReservedEvent = new()
+                {
+                    BuyerId = context.Message.BuyerId,
+                    OrderId = context.Message.OrderId,
+                    Message = "Stock miktarı yetersiz."
+                };
+
+                await publishEndpoint.Publish(stockNotReservedEvent);
             }
 
         }
