@@ -2,6 +2,6 @@
 {
     public enum OrderStatus
     {
-        Suspend, Fail, Complated
+        Suspend, Fail, Completed
     }
 }

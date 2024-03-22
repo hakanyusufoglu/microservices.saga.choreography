@@ -1,8 +1,10 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Order.Api.Consumers;
 using Order.Api.Enums;
 using Order.Api.Models.Contexts;
 using Order.Api.ViewModels;
+using Shared;
 using Shared.Events;
 using Shared.Messages;
 
@@ -14,9 +16,11 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddMassTransit(configurator =>
 {
+    configurator.AddConsumer<PaymentCompletedEventConsumer>();
     configurator.UsingRabbitMq((context, _configure) =>
     {
         _configure.Host(builder.Configuration["RabbitMq"]);
+        _configure.ReceiveEndpoint(RabbitMqSettings.Order_PaymentCompletedEventQueue, e => e.ConfigureConsumer<PaymentCompletedEventConsumer>(context));
     });
 });
 
@@ -42,9 +46,9 @@ app.MapPost("/create-order", async (CreateOrderVm model, OrderApiDbContext _cont
             Price = oi.Price,
             ProductId = Guid.TryParse(oi.ProductId, out Guid _productId) ? _productId : Guid.NewGuid()
         }).ToList(),
-        OrderStatus=OrderStatus.Suspend,
-        CreatedDate=DateTime.UtcNow,
-        TotalPice=model.OrderItems.Sum(oi=>oi.Price*oi.Count)
+        OrderStatus = OrderStatus.Suspend,
+        CreatedDate = DateTime.UtcNow,
+        TotalPice = model.OrderItems.Sum(oi => oi.Price * oi.Count)
     };
 
     await _context.Orders.AddAsync(order);
@@ -58,14 +62,14 @@ app.MapPost("/create-order", async (CreateOrderVm model, OrderApiDbContext _cont
 
         OrderItems = order.OrderItems.Select(oi => new OrderItemMessage()
         {
-            Count=oi.Count,
-            Price=oi.Price,
-            ProductId=oi.ProductId
+            Count = oi.Count,
+            Price = oi.Price,
+            ProductId = oi.ProductId
         }).ToList()
     };
 
     //Yayýnlamýþ olunan evente subscribe olan servisler bu eventi alýr.
-   await _publishEndPoint.Publish(order);
+    await _publishEndPoint.Publish(order);
 });
 
 app.Run();
