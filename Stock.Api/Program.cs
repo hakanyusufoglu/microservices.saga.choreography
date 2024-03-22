@@ -1,4 +1,5 @@
 using MassTransit;
+using MongoDB.Driver;
 using Shared;
 using Stock.Api.Consumers;
 using Stock.Api.Services;
@@ -15,12 +16,26 @@ builder.Services.AddMassTransit(configurator =>
         _configure.Host(builder.Configuration["RabbitMq"]);
         _configure.ReceiveEndpoint(RabbitMqSettings.Stock_OrderCreatedEventQueue, e => e.ConfigureConsumer<OrderCreatedEventConsumer>(context));
         _configure.ReceiveEndpoint(RabbitMqSettings.Stock_PaymentFailedEventQueue, e => e.ConfigureConsumer<PaymentFailedEventConsumer>(context));
-        
+
     });
 });
 
 builder.Services.AddSingleton<MongoDbService>();
 
 var app = builder.Build();
+
+using IServiceScope scope = app.Services.CreateScope();
+MongoDbService mongoDbService = scope.ServiceProvider.GetService<MongoDbService>();
+var stockCollection = mongoDbService.GetCollection<Stock.Api.Models.Stock>();
+
+//stockcollection içerisinde veri olup olmadýðýný kontrol ediyoruz
+if (!stockCollection.FindSync(session => true).Any())
+{
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 100 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 200 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 50 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 30 });
+    await stockCollection.InsertOneAsync(new() { ProductId = Guid.NewGuid(), Count = 5 });
+}
 
 app.Run();

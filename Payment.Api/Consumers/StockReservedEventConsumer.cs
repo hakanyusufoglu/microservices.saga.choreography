@@ -26,7 +26,7 @@ namespace Payment.Api.Consumers
                 {
                     OrderId = context.Message.OrderId,
                     Message = "Ödeme başarısız (ex. Yetersiz Bakiye)",
-                    OrderItemMessages = context.Message.OrderItems
+                    OrderItems = context.Message.OrderItems
                 };
 
                 await publishEndpoint.Publish(paymentFailedEvent);
